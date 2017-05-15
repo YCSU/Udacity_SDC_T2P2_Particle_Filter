@@ -70,6 +70,7 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 	//   observed measurement to this particular landmark.
 	// NOTE: this method will NOT be called by the grading code. But you will probably find it useful to 
 	//   implement this method and use it as a helper during the updateWeights phase.
+    
 
 }
 
@@ -86,6 +87,26 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 	//   3.33. Note that you'll need to switch the minus sign in that equation to a plus to account 
 	//   for the fact that the map's y-axis actually points downwards.)
 	//   http://planning.cs.uiuc.edu/node99.html
+    for(auto p = this->particles.begin(); p != this->particles.end(); ++p){
+        
+      for(auto landmark = map_landmarks.landmark_list.begin(); 
+                landmark != map_landmarks.landmark_list.end(); ++landmark){
+          std::vector<LandmarkObs> predicted;
+          if( dist( landmark -> x_f, landmark -> y_f, p -> x, p -> y) < sensor_range){
+              double vx = landmark -> x_f - p -> x;
+              double vy = landmark -> y_f - p -> y;
+              LandmarkObs obs;
+              obs.x =  vx * cos(p -> theta) + vy * sin(p -> theta);
+              obs.y = -vx * sin(p -> theta) + vy * cos(p -> theta);
+              predicted.push_back(obs);    
+          }
+          //for(auto obs = observations.begin(); obs != observations.end(); ++obs){
+          //  double map_obs_x = p -> x + obs -> x * cos(p -> theta) - obs -> y * sin(p -> theta);
+          //  double map_obs_y = p -> y + obs -> x * sin(p -> theta) + obs -> y * cos(p -> theta);
+          //}
+        }
+
+    }      
 }
 
 void ParticleFilter::resample() {
