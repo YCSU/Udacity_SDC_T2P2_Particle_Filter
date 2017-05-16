@@ -73,12 +73,14 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 	//   implement this method and use it as a helper during the updateWeights phase.
     double min_dist = std::numeric_limits<double>::max();
     for(auto pre = predicted.begin(); pre != predicted.end(); ++pre){
+        int idx = 0;
         for(auto obs = observations.begin(); obs != observations.end(); ++obs){
             double d = dist(pre -> x, pre -> y, obs -> x, obs -> y);
             if(d < min_dist){
-                pre -> id = obs -> id;
+                pre -> id = idx;
                 min_dist = d;
             }
+            ++idx;
         }
     }
 
@@ -116,8 +118,17 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
             //  double map_obs_y = p -> y + obs -> x * sin(p -> theta) + obs -> y * cos(p -> theta);
             //}
         }
+        
         dataAssociation(predicted, observations);
-
+        for(auto pre = predicted.begin(); pre != predicted.end(); ++pre){
+            p -> weight *= 0.5 / std_landmark[0] / std_landmark[1] / M_PI
+                          * exp(
+                                 -0.5 * (
+                                          (pre->x - observations[pre->id].x) * (pre->x - observations[pre->id].x) / std_landmark[0] / std_landmark[0] +
+                                          (pre->y - observations[pre->id].y) * (pre->y - observations[pre->id].y) / std_landmark[1] / std_landmark[1]
+                                        )
+                               );
+        }
     }      
 }
 
