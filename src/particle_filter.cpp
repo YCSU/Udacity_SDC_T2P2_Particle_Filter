@@ -14,6 +14,7 @@
 #include <sstream>
 #include <string>
 #include <iterator>
+#include <limits>
 
 #include "particle_filter.h"
 
@@ -70,7 +71,16 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 	//   observed measurement to this particular landmark.
 	// NOTE: this method will NOT be called by the grading code. But you will probably find it useful to 
 	//   implement this method and use it as a helper during the updateWeights phase.
-    
+    double min_dist = std::numeric_limits<double>::max();
+    for(auto pre = predicted.begin(); pre != predicted.end(); ++pre){
+        for(auto obs = observations.begin(); obs != observations.end(); ++obs){
+            double d = dist(pre -> x, pre -> y, obs -> x, obs -> y);
+            if(d < min_dist){
+                pre -> id = obs -> id;
+                min_dist = d;
+            }
+        }
+    }
 
 }
 
@@ -89,21 +99,23 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 	//   http://planning.cs.uiuc.edu/node99.html
     for(auto p = this->particles.begin(); p != this->particles.end(); ++p){
         
-      for(auto landmark = map_landmarks.landmark_list.begin(); 
+        for(auto landmark = map_landmarks.landmark_list.begin(); 
                 landmark != map_landmarks.landmark_list.end(); ++landmark){
-          std::vector<LandmarkObs> predicted;
-          if( dist( landmark -> x_f, landmark -> y_f, p -> x, p -> y) < sensor_range){
-              double vx = landmark -> x_f - p -> x;
-              double vy = landmark -> y_f - p -> y;
-              LandmarkObs obs;
-              obs.x =  vx * cos(p -> theta) + vy * sin(p -> theta);
-              obs.y = -vx * sin(p -> theta) + vy * cos(p -> theta);
-              predicted.push_back(obs);    
-          }
-          //for(auto obs = observations.begin(); obs != observations.end(); ++obs){
-          //  double map_obs_x = p -> x + obs -> x * cos(p -> theta) - obs -> y * sin(p -> theta);
-          //  double map_obs_y = p -> y + obs -> x * sin(p -> theta) + obs -> y * cos(p -> theta);
-          //}
+            std::vector<LandmarkObs> predicted;
+            if( dist( landmark -> x_f, landmark -> y_f, p -> x, p -> y) < sensor_range){
+                double vx = landmark -> x_f - p -> x;
+                double vy = landmark -> y_f - p -> y;
+                LandmarkObs obs;
+                obs.x =  vx * cos(p -> theta) + vy * sin(p -> theta);
+                obs.y = -vx * sin(p -> theta) + vy * cos(p -> theta);
+                predicted.push_back(obs);    
+            }
+            dataAssociation(predicted, observations);
+            
+            //for(auto obs = observations.begin(); obs != observations.end(); ++obs){
+            //  double map_obs_x = p -> x + obs -> x * cos(p -> theta) - obs -> y * sin(p -> theta);
+            //  double map_obs_y = p -> y + obs -> x * sin(p -> theta) + obs -> y * cos(p -> theta);
+            //}
         }
 
     }      
