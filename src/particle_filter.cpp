@@ -99,9 +99,9 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 	//   http://planning.cs.uiuc.edu/node99.html
     for(auto p = this->particles.begin(); p != this->particles.end(); ++p){
         
+        std::vector<LandmarkObs> predicted;
         for(auto landmark = map_landmarks.landmark_list.begin(); 
                 landmark != map_landmarks.landmark_list.end(); ++landmark){
-            std::vector<LandmarkObs> predicted;
             if( dist( landmark -> x_f, landmark -> y_f, p -> x, p -> y) < sensor_range){
                 double vx = landmark -> x_f - p -> x;
                 double vy = landmark -> y_f - p -> y;
@@ -110,13 +110,13 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
                 obs.y = -vx * sin(p -> theta) + vy * cos(p -> theta);
                 predicted.push_back(obs);    
             }
-            dataAssociation(predicted, observations);
             
             //for(auto obs = observations.begin(); obs != observations.end(); ++obs){
             //  double map_obs_x = p -> x + obs -> x * cos(p -> theta) - obs -> y * sin(p -> theta);
             //  double map_obs_y = p -> y + obs -> x * sin(p -> theta) + obs -> y * cos(p -> theta);
             //}
         }
+        dataAssociation(predicted, observations);
 
     }      
 }
