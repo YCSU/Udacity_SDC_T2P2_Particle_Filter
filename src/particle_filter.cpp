@@ -20,7 +20,7 @@
 
 using namespace std;
 
-default_random_engine gen;
+default_random_engine gen{1};
 
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	// Add random Gaussian noise to each particle.
@@ -56,19 +56,19 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
         for( auto  p = particles.begin(); p != particles.end(); ++p){
             p -> x = p -> x + velocity / yaw_rate * (sin(p -> theta + yaw_rate * delta_t) - sin(p -> theta)) + std_x(gen);
             p -> y = p -> y + velocity / yaw_rate * (cos(p -> theta) - cos(p -> theta + yaw_rate * delta_t)) + std_y(gen);
-            p -> theta = fmod(p -> theta + yaw_rate * delta_t + std_psi(gen), 2.*M_PI);
+            p -> theta = p -> theta + yaw_rate * delta_t + std_psi(gen);
         }
     }else{
         for( auto  p = particles.begin(); p != particles.end(); ++p){
             p -> x = p -> x + velocity * delta_t * cos(p -> theta) + std_x(gen);
             p -> y = p -> y + velocity * delta_t * sin(p -> theta) + std_y(gen);
-            p -> theta = fmod(p -> theta + yaw_rate * delta_t + std_psi(gen), 2.*M_PI);
+            p -> theta = p -> theta + yaw_rate * delta_t + std_psi(gen);
         }      
     }
 
 }
 
-void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::vector<LandmarkObs>& observations) {
+void ParticleFilter::dataAssociation(std::vector<LandmarkObs> &predicted, std::vector<LandmarkObs>& observations) {
 	// TODO: Find the predicted measurement that is closest to each observed measurement and assign the 
 	//   observed measurement to this particular landmark.
 	// NOTE: this method will NOT be called by the grading code. But you will probably find it useful to 
@@ -130,14 +130,14 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         for(auto pre = predicted.begin(); pre != predicted.end(); ++pre){
             cout << "weight: "<< p-> weight << endl;
             cout << "id: " << pre-> id << endl;
-        /*    p -> weight *= 0.5 / std_landmark[0] / std_landmark[1] / M_PI
+            p -> weight *= 0.5 / std_landmark[0] / std_landmark[1] / M_PI
                           * exp(
                                  -0.5 * (
                                           (pre->x - observations[pre->id].x) * (pre->x - observations[pre->id].x) / std_landmark[0] / std_landmark[0] +
                                           (pre->y - observations[pre->id].y) * (pre->y - observations[pre->id].y) / std_landmark[1] / std_landmark[1]
                                         )
                                );
-        */    
+            
         }
         
     }      
@@ -159,7 +159,7 @@ void ParticleFilter::resample() {
         new_particles.push_back(this -> particles[rand_idx(gen)]);
     }
     
-    //this -> particles = new_particles;
+    this -> particles = new_particles;
     
 }
 
